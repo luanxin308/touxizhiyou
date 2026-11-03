@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>透析之友 · 自测</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="fs-2">
+<div id="app"></div>
+<script src="js/util.js"></script>
+<script src="js/store.js"></script>
+<script src="js/ocr.js"></script>
+<script src="js/pages1.js"></script>
+<script src="js/pages2.js"></script>
+<script src="js/pages3.js"></script>
+<script src="js/app.js"></script>
+<script>
+(function () {
+  var q = location.search.replace(/^\?/, '');
+  var s = 'home';
+  if (q) {
+    var kv = q.split('&')[0].split('=');
+    if (kv[1]) { s = decodeURIComponent(kv[1]); }
+  }
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      try {
+        if (window.Store) { window.Store.seedDemo(); }
+      } catch (e) { }
+      location.hash = s;
+      setTimeout(function () {
+        window.dispatchEvent(new Event('hashchange'));
+        var app = document.getElementById('app');
+        var sc = document.querySelector('.scroll');
+        var hero = document.querySelector('.hero');
+        document.title = 'IW' + window.innerWidth + ' IH' + window.innerHeight +
+          ' app' + (app ? app.offsetWidth : -1) +
+          ' scroll' + (sc ? sc.offsetWidth : -1) +
+          ' hero' + (hero ? hero.offsetWidth : -1) +
+          ' body' + document.body.scrollWidth +
+          ' dpr' + window.devicePixelRatio;
+        var dbg = document.createElement('div');
+        if (location.search.indexOf('dbg') >= 0) {
+          dbg.style.cssText = 'position:fixed;left:0;top:0;z-index:9999;background:#000;color:#0f0;font:12px monospace;padding:4px;white-space:pre';
+          dbg.textContent = document.title;
+          document.body.appendChild(dbg);
+        }
+      }, 120);
+    }, 60);
+  });
+})();
+</script>
+</body>
+</html>

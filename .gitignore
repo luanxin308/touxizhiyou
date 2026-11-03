@@ -1,0 +1,15 @@
+# 构建过程产物
+build/
+C:\tb/
+
+# 截图用的临时浏览器档案
+.edge-*/
+
+# 系统与编辑器
+Thumbs.db
+desktop.ini
+.DS_Store
+*.log
+
+# 调试产物（APK 与截图自行保留）
+proto/shots/_raw*.png

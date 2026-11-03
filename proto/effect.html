@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>透析之友 · 界面效果图</title>
+<style>
+:root{
+  --bg:#FBF4E9; --card:#FFFFFF; --line:#EDE0C8;
+  --ink:#2E2418; --ink2:#6E5B44; --ink3:#A08B70;
+  --orange:#E8710A; --orange-h:#F5851F; --orange-d:#B85500; --orange-l:#FFF1DE;
+  --green:#3B7A2F; --green-l:#ECF5E6;
+  --red:#C0392B; --red-l:#FBEAE7;
+  --yellow:#9C6B00; --yellow-l:#FCF1D5;
+  --brown:#A9764B;
+  --r:22px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+  font-size:20px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.screen{width:390px;height:844px;overflow:hidden;display:none;flex-direction:column;background:var(--bg);position:relative}
+
+/* 状态栏 */
+.sb{height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:15px;font-weight:600;color:var(--ink2);flex:none}
+.sb .r{display:flex;gap:6px;align-items:center}
+.sb .bat{width:24px;height:12px;border:1.6px solid var(--ink2);border-radius:3px;position:relative}
+.sb .bat:after{content:"";position:absolute;left:1.5px;top:1.5px;bottom:1.5px;right:6px;background:var(--ink2);border-radius:1px}
+
+/* 顶栏 */
+.bar{display:flex;align-items:center;gap:12px;padding:2px 20px 14px;flex:none}
+.bar h1{font-size:27px;font-weight:800;letter-spacing:-.3px;line-height:1.2}
+.bar .sub{font-size:15px;color:var(--ink2);margin-top:3px}
+.bar .sp{flex:1}
+.back{width:44px;height:44px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);flex:none}
+.body{flex:1;overflow:hidden;padding:0 20px}
+
+/* 卡片 */
+.card{background:var(--card);border-radius:var(--r);padding:18px;border:1px solid var(--line);box-shadow:0 6px 18px rgba(150,110,50,.07)}
+.lbl{font-size:17px;color:var(--ink2);font-weight:600}
+.big{font-size:64px;font-weight:800;letter-spacing:-2px;line-height:1.05;font-variant-numeric:tabular-nums}
+.unit{font-size:26px;font-weight:700;margin-left:6px;letter-spacing:0}
+
+/* 首页 hero */
+.hero{background:linear-gradient(160deg,#FFF6E9,#FFEAD0);border:1px solid #F7DDB9;border-radius:24px;padding:20px}
+.hero .big{color:var(--orange-d)}
+.hero .two{display:flex;gap:10px;margin-top:12px}
+.hero .two div{flex:1;background:rgba(255,255,255,.72);border-radius:14px;padding:10px 12px;font-size:18px;font-weight:700;color:#5A4020}
+.hero .two span{font-weight:800}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:16px;font-weight:800;padding:5px 12px;border-radius:999px}
+.badge.g{background:var(--green-l);color:var(--green)}
+.badge.y{background:var(--yellow-l);color:var(--yellow)}
+.badge.r{background:var(--red-l);color:var(--red)}
+
+/* 按钮 */
+.btn{width:100%;height:72px;border-radius:18px;border:1.5px solid var(--line);background:#fff;color:var(--ink);
+  font-size:24px;font-weight:800;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn.primary{background:linear-gradient(180deg,var(--orange-h),var(--orange));border-color:var(--orange-d);color:#fff;
+  box-shadow:0 5px 0 var(--orange-d),0 10px 20px rgba(232,113,10,.25)}
+.btn.ghost{background:#FFF7EA;border-color:#F3D9AF;color:var(--orange-d)}
+.gap10>*+*{margin-top:10px}
+.gap12>*+*{margin-top:12px}
+
+/* 提示条 */
+.tip{display:flex;align-items:center;gap:10px;background:var(--yellow-l);border:1px solid #F0DCA6;border-radius:16px;padding:12px 14px;font-size:17px;font-weight:600;color:var(--yellow)}
+.tip .dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);flex:none}
+
+/* 底部导航 */
+.nav{height:86px;flex:none;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:6px}
+.nav .it{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:14px;font-weight:700;color:var(--ink3)}
+.nav .it.on{color:var(--orange)}
+.nav .it svg{width:27px;height:27px;stroke:currentColor;fill:none;stroke-width:2.1;stroke-linejoin:round;stroke-linecap:round}
+.nav .mid{width:66px;height:66px;border-radius:50%;background:linear-gradient(180deg,var(--orange-h),var(--orange));
+  margin-top:-26px;border:5px solid #fff;box-shadow:0 6px 14px rgba(232,113,10,.35);display:flex;align-items:center;justify-content:center}
+.nav .mid svg{width:31px;height:31px;stroke:#fff;fill:none;stroke-width:2.2}
+
+/* 分段控件 */
+.seg{display:flex;background:#F2E7D3;border-radius:16px;padding:5px;gap:5px}
+.seg div{flex:1;height:58px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;color:var(--ink2)}
+.seg div.on{background:#fff;color:var(--orange-d);box-shadow:0 3px 10px rgba(150,110,50,.14)}
+
+/* 大数字输入 */
+.disp{background:#fff;border:2px solid #F3D9AF;border-radius:22px;padding:14px 20px;display:flex;align-items:flex-end;gap:8px;box-shadow:inset 0 -3px 0 #FAF0E0}
+.disp .big{color:var(--ink);font-size:66px}
+.disp .u{font-size:26px;font-weight:800;color:var(--ink2);padding-bottom:12px}
+
+/* 键盘 */
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.kp button{height:67px;border-radius:16px;border:1.5px solid var(--line);background:#fff;font-size:30px;font-weight:800;font-family:inherit;color:var(--ink);
+  box-shadow:0 3px 0 #E9DBC2}
+.kp button:active{transform:translateY(2px)}
+
+/* 相机 */
+.cam{background:#191410;flex:1;display:flex;flex-direction:column;color:#fff}
+.cam .sb{color:#fff}
+.cam .sb .bat{border-color:#fff}.cam .sb .bat:after{background:#fff}
+.cam .hint{text-align:center;font-size:22px;font-weight:800;padding:8px 24px 14px}
+.cam .hint small{display:block;font-size:16px;font-weight:600;color:#D9C6A6;margin-top:6px}
+.view{flex:1;position:relative;margin:0 22px;border-radius:20px;overflow:hidden;background:radial-gradient(circle at 50% 40%,#3A3128,#221C15)}
+.scale{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:236px;background:#F7F3EA;border-radius:16px;padding:15px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.scale .scr{background:#0C2B1E;border-radius:8px;height:72px;display:flex;align-items:center;justify-content:center;
+  font-family:"Consolas","Courier New",monospace;font-size:51px;font-weight:700;color:#8EF0B4;letter-spacing:4px;text-shadow:0 0 16px rgba(142,240,180,.6)}
+.scale .brand{font-size:12px;color:#8A8272;text-align:center;margin-top:7px;font-weight:700;letter-spacing:2px}
+.frame{position:absolute;left:9%;right:9%;top:calc(50% - 74px);height:140px;border:2.5px dashed #FFC53D;border-radius:12px}
+.frame i{position:absolute;width:26px;height:26px;border:4px solid #FFC53D}
+.frame i:nth-child(1){left:-4px;top:-4px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.frame i:nth-child(2){right:-4px;top:-4px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+.frame i:nth-child(3){left:-4px;bottom:-4px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+.frame i:nth-child(4){right:-4px;bottom:-4px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.shutter{height:132px;display:flex;align-items:center;justify-content:space-between;padding:0 44px}
+.shutter .s{width:82px;height:82px;border-radius:50%;background:#fff;border:6px solid rgba(255,255,255,.35);box-shadow:0 0 0 4px rgba(255,255,255,.16)}
+.shutter .side{width:62px;height:62px;border-radius:16px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center}
+.shutter .side svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:2}
+
+/* 识别确认 */
+.shot{margin:0 20px;height:186px;border-radius:20px;background:linear-gradient(160deg,#2A241C,#17130F);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.shot .digit{font-family:"Consolas","Courier New",monospace;font-size:64px;font-weight:700;color:#8EF0B4;letter-spacing:6px;text-shadow:0 0 20px rgba(142,240,180,.55)}
+.shot .tag{position:absolute;left:12px;top:12px;background:rgba(255,197,61,.92);color:#3A2A08;font-size:14px;font-weight:800;padding:4px 10px;border-radius:8px}
+.cells{display:flex;gap:8px;justify-content:center;margin:16px 0 6px}
+.cells b{width:52px;height:70px;border-radius:14px;background:#fff;border:2px solid #F3D9AF;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;font-variant-numeric:tabular-nums}
+.cells b.dot{border-style:dashed;color:var(--orange);font-size:44px}
+
+/* 图表 */
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs span{flex:1;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--ink2);background:#fff;border:1.5px solid var(--line)}
+.tabs span.on{background:var(--orange-l);border-color:#F0C88C;color:var(--orange-d)}
+.legend{display:flex;gap:18px;justify-content:center;font-size:16px;font-weight:700;color:var(--ink2);margin-top:2px}
+.legend i{display:inline-block;width:16px;height:5px;border-radius:3px;vertical-align:middle;margin-right:6px}
+
+/* 血压行 */
+.bprow{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:12px 16px;margin-bottom:10px}
+.bprow .n{width:100px;font-size:20px;font-weight:800;color:var(--ink2);flex:none}
+.bprow .v{margin-left:auto;font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
+.bprow .u{font-size:16px;font-weight:700;color:var(--ink3);width:44px;text-align:right;flex:none}
+
+/* 开药 */
+.med{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px 16px;margin-bottom:10px}
+.med .info{flex:1;min-width:0}
+.med .nm{font-size:20px;font-weight:800}
+.med .sp2{font-size:16px;color:var(--ink2);margin-top:3px}
+.med .amt{font-size:22px;font-weight:800;color:var(--orange-d);font-variant-numeric:tabular-nums}
+.pay{display:flex;align-items:center;gap:14px;background:#fff;border-top:1px solid var(--line);padding:12px 20px 16px;flex:none;box-shadow:0 -8px 20px rgba(150,110,50,.07)}
+.pay .sum{flex:1}
+.pay .sum .t{font-size:15px;font-weight:700;color:var(--ink2)}
+.pay .sum .v{font-size:32px;font-weight:800;color:var(--orange-d);font-variant-numeric:tabular-nums}
+.pay .btn{width:auto;padding:0 26px;height:64px;font-size:21px}
+
+/* 排行 */
+.rank{margin-bottom:12px}
+.rank .r{display:flex;justify-content:space-between;font-size:18px;font-weight:700;margin-bottom:5px}
+.rank .r span:last-child{color:var(--orange-d);font-variant-numeric:tabular-nums}
+.rank .track{height:12px;border-radius:6px;background:#F2E7D3;overflow:hidden}
+.rank .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#F7A44A,var(--orange))}
+</style>
+</head>
+<body>
+
+<!-- ================= 1 首页 ================= -->
+<div class="screen" data-s="home">
+  <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+  <div class="bar">
+    <div><h1>早上好，老王</h1><div class="sub">11月3日 星期一 · 今天有透析</div></div>
+    <div class="sp"></div>
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#6E5B44" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.3a1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 2.7 7a1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H7a1.7 1.7 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V7a1.7 1.7 0 0 0 1.5 1H23a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" transform="scale(.86) translate(2,2)"/></svg>
+  </div>
+  <div class="body">
+    <div class="hero">
+      <div class="lbl">本次排水（10月3日 上午班）</div>
+      <div class="big" style="margin-top:6px">2.0<span class="unit">kg</span></div>
+      <div class="two">
+        <div>上机 <span>100.0</span> kg</div>
+        <div>下机 <span>98.0</span> kg</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px;padding:16px 18px">
+      <div style="display:flex;align-items:center">
+        <div>
+          <div class="lbl">最近血压</div>
+          <div class="big" style="font-size:52px">128<span style="font-size:34px;color:#A08B70">/</span>76</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <span class="badge g">✓ 正常</span>
+          <div style="font-size:15px;color:var(--ink2);margin-top:8px;font-weight:600">心率 80 次/分</div>
+        </div>
+      </div>
+    </div>
+    <div class="gap10" style="margin-top:14px">
+      <button class="btn primary">拍体重秤</button>
+      <button class="btn">拍血压计</button>
+      <button class="btn">手动记一条</button>
+    </div>
+    <div class="tip" style="margin-top:12px"><span class="dot"></span>今天该透析了，上机前记得称体重</div>
+  </div>
+  <div class="nav">
+    <div class="it on"><svg viewBox="0 0 24 24"><path d="M3.5 11.2 12 4l8.5 7.2V20a1 1 0 0 1-1 1h-4.6v-6.2H9.1V21H4.5a1 1 0 0 1-1-1z"/></svg>首页</div>
+    <div class="it"><svg viewBox="0 0 24 24"><path d="M3 17.5l5-6.2 4 4.2 4.4-6 4.6 5.4"/><circle cx="3.4" cy="17.5" r="1.2"/><circle cx="20.6" cy="15" r="1.2"/></svg>体重</div>
+    <div class="it"><div class="mid"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="19" height="13" rx="3"/><circle cx="12" cy="14" r="3.6"/><path d="M8.5 7.5 10 4.5h4l1.5 3"/></svg></div></div>
+    <div class="it"><svg viewBox="0 0 24 24"><path d="M12 20.2S4.6 15.4 4.6 10.3A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.4 2.7c0 5.1-7.4 9.9-7.4 9.9z"/></svg>血压</div>
+    <div class="it"><svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="14" rx="3"/><path d="M8.2 6.5V4.2h7.6v2.3M12 10.5v6M9 13.5h6"/></svg>开药</div>
+  </div>
+</div>
+
+<!-- ================= 2 体重录入 ================= -->
+<div class="screen" data-s="weight">
+  <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+  <div class="bar">
+    <div class="back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E2418" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div><h1>记录体重</h1></div>
+    <div class="sp"></div>
+    <div style="font-size:17px;font-weight:800;color:var(--orange-d)">历史</div>
+  </div>
+  <div class="body">
+    <div class="seg"><div class="on">上机前</div><div>下机后</div></div>
+    <div style="display:flex;align-items:flex-end;margin-top:14px">
+      <div class="lbl">最新数值</div>
+      <div style="margin-left:auto;font-size:16px;font-weight:700;color:var(--ink3)">11月3日 08:10</div>
+    </div>
+    <div class="disp" style="margin-top:8px">
+      <div class="big">100.0</div><div class="u">kg</div>
+    </div>
+    <div style="margin-top:12px;background:var(--green-l);border:1.5px solid #CFE3C4;border-radius:16px;padding:12px 16px;color:var(--green);font-size:18px;font-weight:700;line-height:1.55">
+      <div>上次下机 <b>98.0 kg</b></div>
+      <div>本次预计排水 <b style="font-size:22px">2.0 kg</b></div>
+    </div>
+    <div class="kp" style="margin-top:14px">
+      <button>1</button><button>2</button><button>3</button>
+      <button>4</button><button>5</button><button>6</button>
+      <button>7</button><button>8</button><button>9</button>
+      <button>.</button><button>0</button><button style="color:var(--orange-d)">⌫</button>
+    </div>
+  </div>
+  <div style="padding:0 20px 22px"><button class="btn primary">保存</button></div>
+</div>
+
+<!-- ================= 3 拍照取景 ================= -->
+<div class="screen" data-s="camera" style="background:#191410">
+  <div class="cam">
+    <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+    <div class="hint">把体重秤的数字放进框里<small>手机拿稳，离数字 20–40 厘米</small></div>
+    <div class="view">
+      <div class="scale">
+        <div class="scr">100.0</div>
+        <div class="brand">K G</div>
+      </div>
+      <div class="frame"><i></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="shutter">
+      <div class="side"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div>
+      <div class="s"></div>
+      <div class="side"><svg viewBox="0 0 24 24"><path d="M13 2 4.5 13.5H11l-1 8.5L19.5 10H13z"/></svg></div>
+    </div>
+    <div style="text-align:center;font-size:16px;font-weight:700;color:#D9C6A6;padding:8px 0 18px">看不清？可以 <span style="color:#FFC53D">手动输入</span></div>
+  </div>
+</div>
+
+<!-- ================= 4 识别确认 ================= -->
+<div class="screen" data-s="confirm">
+  <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+  <div class="bar">
+    <div class="back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E2418" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div><h1>确认数字</h1><div class="sub">点任意一位可以修改</div></div>
+  </div>
+  <div class="body">
+    <div class="shot">
+      <div class="tag">拍到的照片</div>
+      <div class="digit">100.0</div>
+    </div>
+    <div style="text-align:center;margin-top:16px"><span class="badge g">✓ 识别很清晰</span></div>
+    <div class="cells"><b>1</b><b>0</b><b>0</b><b class="dot">.</b><b>0</b></div>
+    <div style="text-align:center;font-size:26px;font-weight:800;color:var(--ink2);margin-top:4px">单位：kg</div>
+    <div class="card" style="margin-top:18px;background:#FFF7EA;border-color:#F3D9AF;padding:14px 16px">
+      <div style="font-size:18px;font-weight:800;color:#7A5A22">预计本次排水 <span style="font-size:24px">2.0 kg</span></div>
+      <div style="font-size:15px;font-weight:600;color:#9A7A45;margin-top:4px">上次下机体重 98.0 kg</div>
+    </div>
+  </div>
+  <div style="padding:0 20px 22px" class="gap12">
+    <button class="btn primary">确认记入</button>
+    <button class="btn">重拍一张</button>
+  </div>
+</div>
+
+<!-- ================= 5 体重趋势 ================= -->
+<div class="screen" data-s="trend">
+  <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+  <div class="bar">
+    <div class="back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E2418" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div><h1>体重趋势</h1></div>
+  </div>
+  <div class="body">
+    <div class="tabs"><span>1 月</span><span class="on">3 月</span><span>半年</span><span>全部</span></div>
+    <div class="card" style="padding:10px 6px 6px">
+      <svg viewBox="0 0 390 300" width="100%" height="272">
+        <g stroke="#EDE0C8" stroke-width="1">
+          <line x1="46" y1="20" x2="366" y2="20"/><line x1="46" y1="100" x2="366" y2="100"/>
+          <line x1="46" y1="180" x2="366" y2="180"/><line x1="46" y1="260" x2="366" y2="260"/>
+        </g>
+        <g fill="#A08B70" font-size="13" font-weight="700" text-anchor="end">
+          <text x="38" y="25">102</text><text x="38" y="105">100</text><text x="38" y="185">98</text><text x="38" y="265">96</text>
+        </g>
+        <g stroke="#D9C6A6" stroke-width="1.4" stroke-dasharray="3 3">
+          <line x1="46" y1="116" x2="46" y2="188"/><line x1="108" y1="92" x2="108" y2="172"/>
+          <line x1="170" y1="124" x2="170" y2="204"/><line x1="232" y1="68" x2="232" y2="164"/>
+          <line x1="294" y1="108" x2="294" y2="180"/><line x1="356" y1="100" x2="356" y2="180"/>
+        </g>
+        <polyline fill="none" stroke="#E8710A" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round" points="46,116 108,92 170,124 232,68 294,108 356,100"/>
+        <polyline fill="none" stroke="#A9764B" stroke-width="3.6" stroke-linejoin="round" stroke-linecap="round" points="46,188 108,172 170,204 232,164 294,180 356,180"/>
+        <g fill="#E8710A"><circle cx="46" cy="116" r="4.2"/><circle cx="108" cy="92" r="4.2"/><circle cx="170" cy="124" r="4.2"/><circle cx="232" cy="68" r="4.2"/><circle cx="294" cy="108" r="4.2"/><circle cx="356" cy="100" r="4.2"/></g>
+        <g fill="#A9764B"><circle cx="46" cy="188" r="4.2"/><circle cx="108" cy="172" r="4.2"/><circle cx="170" cy="204" r="4.2"/><circle cx="232" cy="164" r="4.2"/><circle cx="294" cy="180" r="4.2"/><circle cx="356" cy="180" r="4.2"/></g>
+        <g fill="#A08B70" font-size="12.5" font-weight="700" text-anchor="middle">
+          <text x="46" y="284">9/20</text><text x="108" y="284">9/23</text><text x="170" y="284">9/26</text>
+          <text x="232" y="284">9/29</text><text x="294" y="284">10/1</text><text x="356" y="284">10/3</text>
+        </g>
+      </svg>
+      <div class="legend"><span><i style="background:#E8710A"></i>上机体重</span><span><i style="background:#A9764B"></i>下机体重</span><span><i style="background:#D9C6A6"></i>本次排水</span></div>
+    </div>
+    <div class="card" style="margin-top:12px;padding:16px 18px;display:flex;text-align:center">
+      <div style="flex:1"><div style="font-size:15px;color:var(--ink2);font-weight:700">平均排水</div><div style="font-size:26px;font-weight:800;color:var(--orange-d)">2.1 kg</div></div>
+      <div style="width:1px;background:var(--line)"></div>
+      <div style="flex:1"><div style="font-size:15px;color:var(--ink2);font-weight:700">最多</div><div style="font-size:26px;font-weight:800">3.2 kg</div></div>
+      <div style="width:1px;background:var(--line)"></div>
+      <div style="flex:1"><div style="font-size:15px;color:var(--ink2);font-weight:700">最少</div><div style="font-size:26px;font-weight:800">1.0 kg</div></div>
+    </div>
+    <div class="card" style="margin-top:12px;padding:12px 18px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--line)">
+        <span class="lbl" style="margin:0">最近记录</span>
+        <span style="font-size:16px;font-weight:800;color:var(--orange-d)">看全部 ›</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)">
+        <span style="font-size:17px;font-weight:700;color:var(--ink2)">10月3日 上午</span>
+        <span style="font-size:19px;font-weight:800">100.0 → 98.0　<b style="color:var(--orange-d)">2.0</b></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0">
+        <span style="font-size:17px;font-weight:700;color:var(--ink2)">10月1日 上午</span>
+        <span style="font-size:19px;font-weight:800">99.8 → 98.0　<b style="color:var(--orange-d)">1.8</b></span>
+      </div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="it"><svg viewBox="0 0 24 24"><path d="M3.5 11.2 12 4l8.5 7.2V20a1 1 0 0 1-1 1h-4.6v-6.2H9.1V21H4.5a1 1 0 0 1-1-1z"/></svg>首页</div>
+    <div class="it on"><svg viewBox="0 0 24 24"><path d="M3 17.5l5-6.2 4 4.2 4.4-6 4.6 5.4"/><circle cx="3.4" cy="17.5" r="1.2"/><circle cx="20.6" cy="15" r="1.2"/></svg>体重</div>
+    <div class="it"><div class="mid"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="19" height="13" rx="3"/><circle cx="12" cy="14" r="3.6"/><path d="M8.5 7.5 10 4.5h4l1.5 3"/></svg></div></div>
+    <div class="it"><svg viewBox="0 0 24 24"><path d="M12 20.2S4.6 15.4 4.6 10.3A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.4 2.7c0 5.1-7.4 9.9-7.4 9.9z"/></svg>血压</div>
+    <div class="it"><svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="14" rx="3"/><path d="M8.2 6.5V4.2h7.6v2.3M12 10.5v6M9 13.5h6"/></svg>开药</div>
+  </div>
+</div>
+
+<!-- ================= 6 血压录入 ================= -->
+<div class="screen" data-s="bp">
+  <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+  <div class="bar">
+    <div class="back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2E2418" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></div>
+    <div><h1>记录血压</h1><div class="sub">11月3日 08:15 · 上午班</div></div>
+  </div>
+  <div class="body">
+    <div class="seg"><div class="on">上机时</div><div>下机时</div></div>
+    <div style="margin-top:16px">
+      <div class="bprow"><div class="n">高压</div><div class="v">152</div><div class="u">mmHg</div></div>
+      <div class="bprow"><div class="n">低压</div><div class="v">88</div><div class="u">mmHg</div></div>
+      <div class="bprow"><div class="n">心率</div><div class="v">76</div><div class="u">次/分</div></div>
+    </div>
+    <div class="tip" style="margin-top:6px;background:var(--orange-l);border-color:#F3D9AF;color:var(--orange-d)">
+      <span class="dot" style="background:var(--orange)"></span>152/88 偏高，若头晕心慌请告诉护士
+    </div>
+    <div class="card" style="margin-top:12px;padding:14px 16px">
+      <div style="font-size:16px;color:var(--ink2);font-weight:600">上次上机血压 148/86 · 本周平均 145/84</div>
+    </div>
+    <div style="font-size:15px;color:var(--ink3);font-weight:600;margin-top:12px;text-align:center">提示仅供参考，不替代医生判断</div>
+  </div>
+  <div style="padding:0 20px 22px" class="gap10">
+    <button class="btn primary">保存</button>
+    <button class="btn ghost">拍照自动填（拍血压计）</button>
+  </div>
+</div>
+
+<!-- ================= 7 开药 ================= -->
+<div class="screen" data-s="med">
+  <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+  <div class="bar">
+    <div><h1>开药 · 11月</h1><div class="sub">2026年11月 · 4 种药</div></div>
+    <div class="sp"></div>
+    <div style="font-size:17px;font-weight:800;color:var(--orange-d)">复制上月</div>
+  </div>
+  <div class="body">
+    <div class="tabs" style="margin-bottom:12px"><span class="on">本月处方</span><span>药品库</span></div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:8px 14px">
+        <div style="font-size:15px;font-weight:700;color:var(--ink2)">药费</div>
+        <div style="font-size:26px;font-weight:800">¥386.50</div>
+      </div>
+      <div style="flex:1;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:8px 14px">
+        <div style="font-size:15px;font-weight:700;color:var(--ink2)">透析费</div>
+        <div style="font-size:26px;font-weight:800">¥900.00</div>
+      </div>
+    </div>
+    <div class="lbl" style="margin-bottom:8px">本月用药 4 种</div>
+    <div class="med"><div class="info"><div class="nm">碳酸钙D3片</div><div class="sp2">1片 × 3次/日 × 30天</div></div></div>
+    <div class="med"><div class="info"><div class="nm">骨化三醇胶丸</div><div class="sp2">1粒 × 1次/日 × 30天</div></div></div>
+    <div class="med"><div class="info"><div class="nm">琥珀酸亚铁片</div><div class="sp2">1片 × 2次/日 × 30天</div></div></div>
+    <div class="med"><div class="info"><div class="nm">非布司他片</div><div class="sp2">0.5片 × 1次/日 × 30天</div></div></div>
+    <button class="btn ghost" style="height:60px;margin-top:2px">＋ 添加药品</button>
+  </div>
+  <div class="pay">
+    <div class="sum"><div class="t">本月总花费</div><div class="v">¥1,286.50</div></div>
+    <button class="btn primary">保存</button>
+  </div>
+</div>
+
+<!-- ================= 8 统计 ================= -->
+<div class="screen" data-s="stats">
+  <div class="sb"><span>8:12</span><span class="r"><span>5G</span><span class="bat"></span></span></div>
+  <div class="bar"><div><h1>花费统计</h1></div></div>
+  <div class="body">
+    <div class="tabs"><span>按月</span><span>按季</span><span class="on">按年</span><span>全部</span></div>
+    <div class="hero" style="padding:16px 20px">
+      <div class="lbl">2026 年 总花费</div>
+      <div class="big" style="font-size:52px;margin-top:2px">4,286<span class="unit">元</span></div>
+      <div style="font-size:16px;font-weight:700;color:#7A5A22;margin-top:4px">今年已记 6 个月 · 平均每月 714 元</div>
+    </div>
+    <div class="card" style="margin-top:12px;padding:14px 10px 4px">
+      <svg viewBox="0 0 350 205" width="100%" height="188">
+        <line x1="6" y1="190" x2="344" y2="190" stroke="#EDE0C8" stroke-width="1.5"/>
+        <g fill="#F2E7D3">
+          <rect x="20" y="86.7" width="34" height="103.3" rx="7"/>
+        </g>
+        <rect x="20" y="86.7" width="34" height="103.3" rx="7" fill="#F7B36A"/>
+        <rect x="74" y="93.3" width="34" height="96.7" rx="7" fill="#F7B36A"/>
+        <rect x="128" y="66.3" width="34" height="123.7" rx="7" fill="#F7B36A"/>
+        <rect x="182" y="74.2" width="34" height="115.8" rx="7" fill="#F7B36A"/>
+        <rect x="236" y="55" width="34" height="135" rx="7" fill="#E8710A"/>
+        <rect x="290" y="125.7" width="34" height="64.3" rx="7" fill="#F7B36A"/>
+        <g fill="#8A7356" font-size="13" font-weight="700" text-anchor="middle">
+          <text x="37" y="203">6月</text><text x="91" y="203">7月</text><text x="145" y="203">8月</text>
+          <text x="199" y="203">9月</text><text x="253" y="203">10月</text><text x="307" y="203">11月</text>
+        </g>
+      </svg>
+    </div>
+    <div class="card" style="margin-top:12px;padding:16px">
+      <div class="lbl" style="margin-bottom:10px">钱花在哪（今年累计）</div>
+      <div class="rank"><div class="r"><span>透析费</span><span>¥2,270</span></div><div class="track"><div class="fill" style="width:53%"></div></div></div>
+      <div class="rank" style="margin-bottom:0"><div class="r"><span>药费</span><span>¥2,016</span></div><div class="track"><div class="fill" style="width:47%;background:#A9764B"></div></div></div>
+    </div>
+  </div>
+  <div class="nav">
+    <div class="it"><svg viewBox="0 0 24 24"><path d="M3.5 11.2 12 4l8.5 7.2V20a1 1 0 0 1-1 1h-4.6v-6.2H9.1V21H4.5a1 1 0 0 1-1-1z"/></svg>首页</div>
+    <div class="it"><svg viewBox="0 0 24 24"><path d="M3 17.5l5-6.2 4 4.2 4.4-6 4.6 5.4"/><circle cx="3.4" cy="17.5" r="1.2"/><circle cx="20.6" cy="15" r="1.2"/></svg>体重</div>
+    <div class="it"><div class="mid"><svg viewBox="0 0 24 24"><rect x="2.5" y="7.5" width="19" height="13" rx="3"/><circle cx="12" cy="14" r="3.6"/><path d="M8.5 7.5 10 4.5h4l1.5 3"/></svg></div></div>
+    <div class="it"><svg viewBox="0 0 24 24"><path d="M12 20.2S4.6 15.4 4.6 10.3A4.2 4.2 0 0 1 12 7.6a4.2 4.2 0 0 1 7.4 2.7c0 5.1-7.4 9.9-7.4 9.9z"/></svg>血压</div>
+    <div class="it on"><svg viewBox="0 0 24 24"><rect x="3.5" y="6.5" width="17" height="14" rx="3"/><path d="M8.2 6.5V4.2h7.6v2.3M12 10.5v6M9 13.5h6"/></svg>开药</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var m=/[?&]s=([a-z]+)/.exec(location.search);
+  var s=m?m[1]:'home';
+  var all=document.querySelectorAll('.screen');
+  for(var i=0;i<all.length;i++){ all[i].style.display=(all[i].getAttribute('data-s')===s)?'flex':'none'; }
+  window.__SCREEN__=s;
+})();
+</script>
+</body>
+</html>

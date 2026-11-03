@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>shot</title>
+<style>
+html, body { margin: 0; padding: 0; background: #fff; }
+#f { width: 390px; height: 844px; border: 0; display: block; }
+</style>
+</head>
+<body>
+<iframe id="f" src="test.html?s=home"></iframe>
+<script>
+(function () {
+  var m = location.search.match(/[?&]s=([^&]*)/);
+  var s = m ? decodeURIComponent(m[1]) : 'home';
+  document.getElementById('f').src = 'test.html?s=' + encodeURIComponent(s);
+})();
+</script>
+</body>
+</html>
