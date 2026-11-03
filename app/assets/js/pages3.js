@@ -164,12 +164,13 @@
       var add = page.querySelector('#add');
       if (add) {
         add.onclick = function () {
-          var html = '<h3>从药品库选一种</h3><div class="gap8" style="display:block;max-height:52vh;overflow:auto">';
+          var html = '<h3>添加药品</h3><div class="gap8" style="display:block;max-height:46vh;overflow:auto">';
           var ms = S.meds();
           for (var i = 0; i < ms.length; i++) {
             html += '<div class="lrow" data-pick="' + ms[i].id + '"><div class="main"><div class="t1">' + U.esc(ms[i].name) + '</div><div class="t2">' + U.esc(ms[i].cat || '') + '</div></div></div>';
           }
           html += '</div>';
+          html += '<button class="btn ghost mt12" id="freeadd">✎ 手动输入药名</button>';
           U.openSheet(html, function (sh, close) {
             sh.onclick = function (e) {
               var t = e.target.closest('[data-pick]');
@@ -178,7 +179,29 @@
               close();
               editItem(-1, mid);
             };
+            sh.querySelector('#freeadd').onclick = function (e) {
+              e.stopPropagation();
+              close();
+              setTimeout(function () {
+                askText('手动添加药品', '例如：碳酸钙D3片', function (name) {
+                  var m = S.addMed({ name: name, cat: '', spec: '', unit: '片' });
+                  setTimeout(function () { editItem(-1, m.id); }, 160);
+                });
+              }, 160);
+            };
           });
+        };
+      }
+
+      var nm0 = page.querySelector('#newmed');
+      if (nm0) {
+        nm0.onclick = function () {
+          setTimeout(function () {
+            askText('新增药品', '例如：碳酸钙D3片', function (name) {
+              var m = S.addMed({ name: name, cat: '', spec: '', unit: '片' });
+              setTimeout(function () { editMed(m.id); }, 160);
+            });
+          }, 60);
         };
       }
 
@@ -187,11 +210,6 @@
           editItem(parseInt(r.getAttribute('data-i'), 10), null);
         };
       });
-
-      var nm = page.querySelector('#newmed');
-      if (nm) {
-        nm.onclick = function () { editMed(null); };
-      }
 
       U.$$('[data-del]', page).forEach(function (b) {
         b.onclick = function (e) {
@@ -305,6 +323,26 @@
             render();
           };
         }
+      });
+    }
+
+    // 只有一行文字的输入弹层：药名、备注这类自由填写
+    function askText(title, ph, cb) {
+      var html = '<h3>' + title + '</h3>';
+      html += '<div class="field mt12"><input id="ft" placeholder="' + U.esc(ph) + '" ' +
+        'style="width:100%;border:0;font-size:calc(22px * var(--k))"></div>';
+      html += '<button class="btn primary mt16" id="tok">确定</button>';
+      U.openSheet(html, function (sh, close) {
+        var inp = sh.querySelector('#ft');
+        setTimeout(function () {
+          try { inp.focus(); } catch (e) { }
+        }, 150);
+        sh.querySelector('#tok').onclick = function () {
+          var v = inp.value.trim();
+          if (!v) { U.toast('请先填写'); return; }
+          close();
+          cb(v);
+        };
       });
     }
 

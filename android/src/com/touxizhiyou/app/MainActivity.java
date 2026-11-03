@@ -39,6 +39,7 @@ public class MainActivity extends Activity {
     private File photoFile;
     private android.widget.TextView dbg;
     private boolean pageDone = false;
+    private boolean probeDone = false;
     private boolean triedData = false;
     private boolean triedSoft = false;
 
@@ -91,7 +92,6 @@ public class MainActivity extends Activity {
         dbg.setTextColor(0xFFC0392B);
         dbg.setBackgroundColor(0xF2FFFFFF);
         dbg.setPadding(16, 16, 16, 16);
-        dbg.setMaxLines(16);
         dbg.setText("启动中…");
         android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
                 android.view.ViewGroup.LayoutParams.MATCH_PARENT,
@@ -101,164 +101,199 @@ public class MainActivity extends Activity {
 
         setContentView(root);
 
-        // 把加载链条上每一步的事实都摆到屏幕上
-        StringBuilder sb = new StringBuilder();
+        // 诊断条平时不显示，只有页面加载失败时才弹出来
         try {
-            String[] top = getAssets().list("");
-            sb.append("A[").append(top.length).append("]: ").append(join(top)).append("\n");
-        } catch (Throwable t) {
-            sb.append("A: 列出失败 ").append(t).append("\n");
+            dbg.setVisibility(android.view.View.GONE);
+        } catch (Throwable ignore) {
         }
-        try {
-            String[] jsd = getAssets().list("js");
-            sb.append("J[").append(jsd.length).append("]: ").append(join(jsd)).append("\n");
-        } catch (Throwable t) {
-            sb.append("J: 列出失败 ").append(t).append("\n");
-        }
-        try {
-            InputStream in = getAssets().open("index.html");
-            sb.append("OPEN: ok ").append(in.available()).append("B\n");
-            in.close();
-        } catch (Throwable t) {
-            sb.append("OPEN: 失败 ").append(t).append("\n");
-        }
-        try {
-            String ua = web.getSettings().getUserAgentString();
-            sb.append("UA: ").append(ua).append("\n");
-        } catch (Throwable t) {
-            sb.append("UA: 取不到 ").append(t).append("\n");
-        }
-        dbg.setText(sb.toString());
 
         web.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageStarted(WebView v, String url, Bitmap fav) {
-                append("START " + url);
+                log("START " + shortUrl(url));
             }
 
             @Override
             public void onPageFinished(WebView v, String url) {
                 pageDone = true;
-                append("DONE " + url);
+                log("应用 DONE");
+                new android.os.Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        probeJs();
+                    }
+                }, 1200);
             }
 
             @Override
             public void onReceivedError(WebView v, int code, String desc, String url) {
-                append("ERR " + code + " " + desc + " @ " + url);
+                log("ERR " + code + " " + desc);
+                showDebug();
             }
 
             @Override
-            public void onReceivedHttpError(WebView v, android.webkit.WebResourceRequest r,
-                                            android.webkit.WebResourceResponse e) {
-                append("HTTP " + e.getStatusCode() + " " + r.getUrl());
+            public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail detail) {
+                log("渲染进程已退出 crash=" + detail.didCrash());
+                showDebug();
+                return true;
             }
         });
 
-        try {
-            web.loadUrl("file:///android_asset/index.html");
-        } catch (Throwable t) {
-            append("LOAD 异常: " + t);
-        }
+        loadInline();
 
         new android.os.Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                try {
-                    web.evaluateJavascript(
-                            "(function(){try{return 'bodyLen='+(document.body?document.body.innerHTML.length:-1)"
-                                    + "+' htmlLen='+document.documentElement.innerHTML.length"
-                                    + "+' ready='+document.readyState"
-                                    + "+' U='+(typeof window.U)+' S='+(typeof window.Store)"
-                                    + "+' P1='+(typeof window.P1);}catch(e){return 'JSERR '+e;}})()",
-                            new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String value) {
-                                    append("JS " + value);
-                                }
-                            });
-                } catch (Throwable t) {
-                    append("JS 调用异常: " + t);
-                }
-
-                // file:// 迟迟没有回调，说明这条路走不通，自动换成单文件 + loadData
-                if (!pageDone && !triedData) {
-                    triedData = true;
-                    append("file:// 2.5 秒仍无 DONE，改用 loadData 单文件方案");
-                    loadInline();
+                if (!pageDone) {
+                    log("3 秒仍未加载完成");
+                    showDebug();
                 }
             }
-        }, 2500);
+        }, 3000);
+    }
+
+    private void showDebug() {
+        try {
+            dbg.setVisibility(android.view.View.VISIBLE);
+        } catch (Throwable ignore) {
+        }
+    }
+
+    // 页面说自己加载完了，再回头问它一句：脚本到底跑起来没有
+    private void probeJs() {
+        try {
+            web.evaluateJavascript(
+                    "(function(){try{var b=document.body;return 'U='+(typeof window.U)"
+                            + "+' S='+(typeof window.Store)"
+                            + "+' OCR='+(typeof window.OCR)"
+                            + "+' bodyLen='+(b?b.innerHTML.length:-1)"
+                            + "+' scripts='+document.scripts.length"
+                            + "+' htmlLen='+document.documentElement.innerHTML.length"
+                            + "+' ready='+document.readyState"
+                            + "+' head='+(b?b.innerHTML.substring(0,70):'');}catch(e){return 'ERR '+e;}})()",
+                    new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String value) {
+                            log("JS探测 " + value);
+                            // 脚本真的跑起来了就彻底静默；没跑起来才把诊断条亮出来
+                            if (value != null && value.indexOf("U=object") >= 0) {
+                                try {
+                                    dbg.setVisibility(android.view.View.GONE);
+                                } catch (Throwable ignore) {
+                                }
+                            } else {
+                                showDebug();
+                            }
+                        }
+                    });
+        } catch (Throwable t) {
+            log("JS 探测调用异常: " + t);
+        }
+    }
+
+    private String providerInfo() {
+        try {
+            if (Build.VERSION.SDK_INT >= 26) {
+                android.content.pm.PackageInfo pi = WebView.getCurrentWebViewPackage();
+                if (pi != null) {
+                    return pi.packageName + " " + pi.versionName;
+                }
+                return "取不到";
+            }
+            return "SDK<26";
+        } catch (Throwable t) {
+            return "异常 " + t;
+        }
+    }
+
+    private String probeAsset() {
+        try {
+            InputStream in = getAssets().open("index.html");
+            int n = in.available();
+            in.close();
+            return "ok " + n + "B";
+        } catch (Throwable t) {
+            return "失败 " + t;
+        }
+    }
+
+    private String shortUrl(String url) {
+        if (url == null) {
+            return "null";
+        }
+        if (url.length() > 42) {
+            return url.substring(0, 42) + "…";
+        }
+        return url;
+    }
+
+    private String readAsset(String name) {
+        try {
+            InputStream in = getAssets().open(name);
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                bo.write(buf, 0, n);
+            }
+            in.close();
+            return new String(bo.toByteArray(), "UTF-8");
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     // 读 assets 里由 tools/inline.js 生成的自包含单页，用 loadDataWithBaseURL 直接喂给 WebView
     private void loadInline() {
-        try {
-            InputStream in = getAssets().open("single.html");
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) > 0) {
-                bo.write(buf, 0, n);
-            }
-            in.close();
-            String html = new String(bo.toByteArray(), "UTF-8");
-            append("single.html " + html.length() + " 字符，开始 loadDataWithBaseURL");
-            web.loadDataWithBaseURL("https://app.local/", html, "text/html", "UTF-8", null);
+        String html = readAsset("single.html");
+        if (html == null || html.length() < 1000) {
+            log("单页读不到，退回 file://");
+            web.loadUrl("file:///android_asset/index.html");
+            return;
+        }
+        log("single.html " + html.length() + " 字符，loadData 加载中…");
+        web.loadDataWithBaseURL("https://app.local/", html, "text/html", "UTF-8", null);
 
-            // 第三层兜底：换软件渲染再试一次（部分国产 ROM 的 GPU 合成会让 WebView 白屏）
-            new android.os.Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!pageDone && !triedSoft) {
-                        triedSoft = true;
-                        append("loadData 2.5 秒仍无 DONE，切换软件渲染重试");
-                        web.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
-                        loadInlineNoSoft();
+        // 兜底：换软件渲染再试一次（部分国产 ROM 的 GPU 合成会让 WebView 白屏）
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (!pageDone && !triedSoft) {
+                    triedSoft = true;
+                    log("应用页 3 秒未完成 → 软件渲染重试");
+                    web.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
+                    String h = readAsset("single.html");
+                    if (h != null) {
+                        web.loadDataWithBaseURL("https://app.local/", h, "text/html", "UTF-8", null);
                     }
                 }
-            }, 2500);
-        } catch (Throwable t) {
-            append("读 single.html 失败: " + t);
-        }
-    }
-
-    private void loadInlineNoSoft() {
-        try {
-            InputStream in = getAssets().open("single.html");
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) > 0) {
-                bo.write(buf, 0, n);
             }
-            in.close();
-            String html = new String(bo.toByteArray(), "UTF-8");
-            web.loadDataWithBaseURL("https://app.local/", html, "text/html", "UTF-8", null);
-        } catch (Throwable t) {
-            append("软件渲染重试失败: " + t);
-        }
+        }, 3000);
     }
 
-    private void append(final String line) {
+    private final java.util.ArrayList<String> logLines = new java.util.ArrayList<String>();
+
+    private void log(final String line) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                if (dbg != null) {
-                    dbg.append("\n" + line);
+                if (dbg == null) {
+                    return;
                 }
+                logLines.add(line);
+                while (logLines.size() > 10) {
+                    logLines.remove(0);
+                }
+                StringBuilder b = new StringBuilder();
+                for (int i = 0; i < logLines.size(); i++) {
+                    if (i > 0) {
+                        b.append('\n');
+                    }
+                    b.append(logLines.get(i));
+                }
+                dbg.setText(b.toString());
             }
         });
-    }
-
-    private String join(String[] arr) {
-        StringBuilder b = new StringBuilder();
-        for (int i = 0; i < arr.length; i++) {
-            if (i > 0) {
-                b.append(',');
-            }
-            b.append(arr[i]);
-        }
-        return b.toString();
     }
 
     // ---------- 返回键：先问页面要不要自己处理 ----------

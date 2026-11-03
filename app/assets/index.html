@@ -17,7 +17,7 @@
     errs.push(m + ' @ ' + src + ':' + line);
     return false;
   };
-  var probes = ['U', 'Store', 'OCR', 'P1', 'P2', 'P3'];
+  var probes = ['U', 'Store', 'OCR', 'P1'];
   setTimeout(function () {
     var miss = [];
     for (var i = 0; i < probes.length; i++) {
@@ -28,6 +28,8 @@
         '<div style="padding:24px;font:16px/1.7 sans-serif;color:#C0392B">' +
         '<h2 style="font-size:20px">页面脚本没能加载</h2>' +
         '<p>缺少：' + miss.join('、') + '</p>' +
+        '<p>脚本块：' + document.scripts.length + ' 个，页面大小 ' +
+        document.documentElement.innerHTML.length + ' 字符</p>' +
         (errs.length ? '<p>错误：' + errs.join('<br>') + '</p>' : '') +
         '<p style="color:#6E5B44">地址：' + location.href + '</p></div>';
     }

@@ -7,9 +7,11 @@
     <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
 
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
+
+    <!-- 不声明 CAMERA 权限：拍照走系统相机（IMAGE_CAPTURE），
+         一旦声明就必须先弹运行时授权，否则系统会以 revoked permission 拒绝 -->
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
