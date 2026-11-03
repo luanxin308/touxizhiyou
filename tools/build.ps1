@@ -63,6 +63,12 @@ if ($LASTEXITCODE -ne 0) { throw "d8 failed" }
 # backslashes ("assets/js\app.js"), which WebView cannot resolve -> blank screen.
 # Assets are packed here manually with forward slashes.
 Write-Host "[5/6] pack assets + dex"
+# 生成自包含单页（WebView 走 file:// 卡住时，MainActivity 会用 loadDataWithBaseURL 兜底加载它）
+$inlineJs = Join-Path $root "tools\inline.js"
+if (Test-Path $inlineJs) {
+  node $inlineJs $assets
+  if ($LASTEXITCODE -ne 0) { throw "inline.js failed" }
+}
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $apk = Join-Path $build "base.apk"
 $zip = [System.IO.Compression.ZipFile]::Open($apk, 'Update')

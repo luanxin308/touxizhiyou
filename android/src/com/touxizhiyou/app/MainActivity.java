@@ -38,6 +38,9 @@ public class MainActivity extends Activity {
     private WebView web;
     private File photoFile;
     private android.widget.TextView dbg;
+    private boolean pageDone = false;
+    private boolean triedData = false;
+    private boolean triedSoft = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +138,7 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPageFinished(WebView v, String url) {
+                pageDone = true;
                 append("DONE " + url);
             }
 
@@ -175,8 +179,64 @@ public class MainActivity extends Activity {
                 } catch (Throwable t) {
                     append("JS 调用异常: " + t);
                 }
+
+                // file:// 迟迟没有回调，说明这条路走不通，自动换成单文件 + loadData
+                if (!pageDone && !triedData) {
+                    triedData = true;
+                    append("file:// 2.5 秒仍无 DONE，改用 loadData 单文件方案");
+                    loadInline();
+                }
             }
         }, 2500);
+    }
+
+    // 读 assets 里由 tools/inline.js 生成的自包含单页，用 loadDataWithBaseURL 直接喂给 WebView
+    private void loadInline() {
+        try {
+            InputStream in = getAssets().open("single.html");
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                bo.write(buf, 0, n);
+            }
+            in.close();
+            String html = new String(bo.toByteArray(), "UTF-8");
+            append("single.html " + html.length() + " 字符，开始 loadDataWithBaseURL");
+            web.loadDataWithBaseURL("https://app.local/", html, "text/html", "UTF-8", null);
+
+            // 第三层兜底：换软件渲染再试一次（部分国产 ROM 的 GPU 合成会让 WebView 白屏）
+            new android.os.Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!pageDone && !triedSoft) {
+                        triedSoft = true;
+                        append("loadData 2.5 秒仍无 DONE，切换软件渲染重试");
+                        web.setLayerType(android.view.View.LAYER_TYPE_SOFTWARE, null);
+                        loadInlineNoSoft();
+                    }
+                }
+            }, 2500);
+        } catch (Throwable t) {
+            append("读 single.html 失败: " + t);
+        }
+    }
+
+    private void loadInlineNoSoft() {
+        try {
+            InputStream in = getAssets().open("single.html");
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            byte[] buf = new byte[8192];
+            int n;
+            while ((n = in.read(buf)) > 0) {
+                bo.write(buf, 0, n);
+            }
+            in.close();
+            String html = new String(bo.toByteArray(), "UTF-8");
+            web.loadDataWithBaseURL("https://app.local/", html, "text/html", "UTF-8", null);
+        } catch (Throwable t) {
+            append("软件渲染重试失败: " + t);
+        }
     }
 
     private void append(final String line) {
