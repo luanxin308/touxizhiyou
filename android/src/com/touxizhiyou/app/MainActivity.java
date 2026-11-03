@@ -37,6 +37,7 @@ public class MainActivity extends Activity {
 
     private WebView web;
     private File photoFile;
+    private android.widget.TextView dbg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +51,8 @@ public class MainActivity extends Activity {
             } catch (Throwable ignored) {
             }
         }
+
+        android.widget.FrameLayout root = new android.widget.FrameLayout(this);
 
         web = new WebView(this);
 
@@ -73,12 +76,129 @@ public class MainActivity extends Activity {
 
         web.setBackgroundColor(0xFFFBF4E9);
         web.setOverScrollMode(WebView.OVER_SCROLL_NEVER);
-        web.setWebViewClient(new WebViewClient());
         web.addJavascriptInterface(new Bridge(), "Android");
         web.setLongClickable(false);
 
-        setContentView(web);
-        web.loadUrl("file:///android_asset/index.html");
+        root.addView(web, new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT));
+
+        dbg = new android.widget.TextView(this);
+        dbg.setTextSize(11f);
+        dbg.setTextColor(0xFFC0392B);
+        dbg.setBackgroundColor(0xF2FFFFFF);
+        dbg.setPadding(16, 16, 16, 16);
+        dbg.setMaxLines(16);
+        dbg.setText("启动中…");
+        android.widget.FrameLayout.LayoutParams lp = new android.widget.FrameLayout.LayoutParams(
+                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                android.view.ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = 70;
+        root.addView(dbg, lp);
+
+        setContentView(root);
+
+        // 把加载链条上每一步的事实都摆到屏幕上
+        StringBuilder sb = new StringBuilder();
+        try {
+            String[] top = getAssets().list("");
+            sb.append("A[").append(top.length).append("]: ").append(join(top)).append("\n");
+        } catch (Throwable t) {
+            sb.append("A: 列出失败 ").append(t).append("\n");
+        }
+        try {
+            String[] jsd = getAssets().list("js");
+            sb.append("J[").append(jsd.length).append("]: ").append(join(jsd)).append("\n");
+        } catch (Throwable t) {
+            sb.append("J: 列出失败 ").append(t).append("\n");
+        }
+        try {
+            InputStream in = getAssets().open("index.html");
+            sb.append("OPEN: ok ").append(in.available()).append("B\n");
+            in.close();
+        } catch (Throwable t) {
+            sb.append("OPEN: 失败 ").append(t).append("\n");
+        }
+        try {
+            String ua = web.getSettings().getUserAgentString();
+            sb.append("UA: ").append(ua).append("\n");
+        } catch (Throwable t) {
+            sb.append("UA: 取不到 ").append(t).append("\n");
+        }
+        dbg.setText(sb.toString());
+
+        web.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView v, String url, Bitmap fav) {
+                append("START " + url);
+            }
+
+            @Override
+            public void onPageFinished(WebView v, String url) {
+                append("DONE " + url);
+            }
+
+            @Override
+            public void onReceivedError(WebView v, int code, String desc, String url) {
+                append("ERR " + code + " " + desc + " @ " + url);
+            }
+
+            @Override
+            public void onReceivedHttpError(WebView v, android.webkit.WebResourceRequest r,
+                                            android.webkit.WebResourceResponse e) {
+                append("HTTP " + e.getStatusCode() + " " + r.getUrl());
+            }
+        });
+
+        try {
+            web.loadUrl("file:///android_asset/index.html");
+        } catch (Throwable t) {
+            append("LOAD 异常: " + t);
+        }
+
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    web.evaluateJavascript(
+                            "(function(){try{return 'bodyLen='+(document.body?document.body.innerHTML.length:-1)"
+                                    + "+' htmlLen='+document.documentElement.innerHTML.length"
+                                    + "+' ready='+document.readyState"
+                                    + "+' U='+(typeof window.U)+' S='+(typeof window.Store)"
+                                    + "+' P1='+(typeof window.P1);}catch(e){return 'JSERR '+e;}})()",
+                            new ValueCallback<String>() {
+                                @Override
+                                public void onReceiveValue(String value) {
+                                    append("JS " + value);
+                                }
+                            });
+                } catch (Throwable t) {
+                    append("JS 调用异常: " + t);
+                }
+            }
+        }, 2500);
+    }
+
+    private void append(final String line) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (dbg != null) {
+                    dbg.append("\n" + line);
+                }
+            }
+        });
+    }
+
+    private String join(String[] arr) {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < arr.length; i++) {
+            if (i > 0) {
+                b.append(',');
+            }
+            b.append(arr[i]);
+        }
+        return b.toString();
     }
 
     // ---------- 返回键：先问页面要不要自己处理 ----------
