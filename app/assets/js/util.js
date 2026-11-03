@@ -85,32 +85,37 @@
   }
 
   // 血压分级（仅提示，不诊断）
+  // 统一的分级返回：cls 与 tone 同值，避免调用方写错字段
+  function lv(cls, text) {
+    return { cls: cls, tone: cls, text: text };
+  }
+
   function bpLevel(sbp, dbp) {
     sbp = +sbp;
     dbp = +dbp;
-    if (!sbp || !dbp) { return { cls: '', text: '' }; }
-    if (sbp >= 180 || dbp >= 110) { return { cls: 'r', text: '很高' }; }
-    if (sbp >= 140 || dbp >= 90) { return { cls: 'o', text: '偏高' }; }
-    if (sbp < 90 || dbp < 60) { return { cls: 'y', text: '偏低' }; }
-    if (sbp <= 139 && dbp <= 89) { return { cls: 'g', text: '正常' }; }
-    return { cls: 'y', text: '需关注' };
+    if (!sbp || !dbp) { return lv('', ''); }
+    if (sbp >= 180 || dbp >= 110) { return lv('r', '很高'); }
+    if (sbp >= 140 || dbp >= 90) { return lv('o', '偏高'); }
+    if (sbp < 90 || dbp < 60) { return lv('y', '偏低'); }
+    if (sbp <= 139 && dbp <= 89) { return lv('g', '正常'); }
+    return lv('y', '需关注');
   }
 
   function hrLevel(hr) {
     hr = +hr;
-    if (!hr) { return { cls: '', text: '' }; }
-    if (hr < 50) { return { cls: 'y', text: '偏慢' }; }
-    if (hr > 100) { return { cls: 'y', text: '偏快' }; }
-    return { cls: 'g', text: '正常' };
+    if (!hr) { return lv('', ''); }
+    if (hr < 50) { return lv('y', '偏慢'); }
+    if (hr > 100) { return lv('y', '偏快'); }
+    return lv('g', '正常');
   }
 
   // 透析量：本次上机体重 − 上次下机体重
   function ufLevel(uf) {
-    if (uf === null || uf === undefined || isNaN(uf)) { return { cls: '', text: '' }; }
-    if (uf < 0) { return { cls: 'y', text: '比上次下机还轻，可能脱水过多或称重有误' }; }
-    if (uf > 5) { return { cls: 'o', text: '超过 5 kg，请和护士核对' }; }
-    if (uf > 3.5) { return { cls: 'y', text: '偏多，注意控制饮水' }; }
-    return { cls: 'g', text: '在常见范围内' };
+    if (uf === null || uf === undefined || isNaN(uf)) { return lv('', ''); }
+    if (uf < 0) { return lv('y', '比上次下机还轻，可能脱水过多或称重有误'); }
+    if (uf > 5) { return lv('o', '超过 5 kg，请和护士核对'); }
+    if (uf > 3.5) { return lv('y', '偏多，注意控制饮水'); }
+    return lv('g', '在常见范围内');
   }
 
   // ---------- Toast ----------

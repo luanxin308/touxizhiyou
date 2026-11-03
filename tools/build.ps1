@@ -1,4 +1,4 @@
-﻿# Build APK offline with Android SDK build-tools (no Gradle)
+# Build APK offline with Android SDK build-tools (no Gradle)
 # aapt2 cannot handle non-ASCII paths, so the project is mirrored to C:\tb first.
 # Usage: powershell -ExecutionPolicy Bypass -File tools\build.ps1
 $ErrorActionPreference = 'Continue'
@@ -27,7 +27,7 @@ $build = Join-Path $root "build"
 $dist = Join-Path $srcRoot "dist"
 
 # drop debug-only pages from the shipped package
-foreach ($dbgFile in @("test.html", "shot.html")) {
+foreach ($dbgFile in @("test.html", "shot.html", "ocr-test.html")) {
   $f = Join-Path $assets $dbgFile
   if (Test-Path $f) { Remove-Item $f -Force }
 }

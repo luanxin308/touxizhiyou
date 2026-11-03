@@ -723,39 +723,185 @@
   };
 
   // ============================ 血压历史 ============================
-  P.bpHist = function (page) {
-    var ss = S.sessions().slice().reverse();
-    var rows = [];
-    for (var i = 0; i < ss.length; i++) {
-      var s = ss[i];
-      if (s.up && s.up.sbp) { rows.push({ d: s.date, shift: s.shift, w: '上机', v: s.up }); }
-      if (s.down && s.down.sbp) { rows.push({ d: s.date, shift: s.shift, w: '下机', v: s.down }); }
+  // ============================ 血压记录（趋势 + 列表） ============================
+  var bpMode = 'trend';
+
+  function drawBp(cv, list) {
+    if (!cv || !list.length) { return; }
+    var dpr = g.devicePixelRatio || 1;
+    var W = cv.parentNode.clientWidth - 36;
+    var H = 220;
+    cv.width = W * dpr;
+    cv.height = H * dpr;
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = '600 11px -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textBaseline = 'middle';
+
+    var padL = 36, padR = 14, padT = 14, padB = 26;
+    var iw = W - padL - padR, ih = H - padT - padB;
+
+    var mn = 999, mx = -999;
+    for (var i = 0; i < list.length; i++) {
+      var sb = +list[i].v.sbp, db = +list[i].v.dbp;
+      if (db < mn) { mn = db; }
+      if (sb > mx) { mx = sb; }
+    }
+    var stepS = [10, 20, 25, 50][0];
+    var rows = 5;
+    while (stepS * rows < (mx - mn) * 1.25 && stepS < 50) {
+      stepS = stepS === 10 ? 20 : (stepS === 20 ? 25 : 50);
+    }
+    var mid = (mx + mn) / 2;
+    var lo = Math.round((mid - stepS * rows / 2) / stepS) * stepS;
+    if (lo < 30) { lo = 30; }
+    var hi = lo + stepS * rows;
+
+    function X(i) {
+      if (list.length === 1) { return padL + iw / 2; }
+      return padL + iw * i / (list.length - 1);
+    }
+    function Y(v) {
+      return padT + ih * (1 - (v - lo) / (hi - lo));
     }
 
-    var h = '<div class="page">';
-    h += top({ title: '血压记录', sub: '共 ' + rows.length + ' 条', back: true });
-    h += '<div class="scroll">';
-    if (!rows.length) {
-      h += '<div class="empty">还没有记录</div>';
-    } else {
-      h += '<div class="gap10" style="display:block">';
-      for (i = 0; i < rows.length; i++) {
-        var r = rows[i];
-        var lv = U.bpLevel(r.v.sbp, r.v.dbp);
-        h += '<div class="lrow">';
-        h += '<div class="main">';
-        h += '<div class="t1">' + U.fmtDate(r.d) + ' ' + r.w + '</div>';
-        h += '<div class="t2">' + (r.v.time || '') + (r.v.hr ? (' · 心率 ' + r.v.hr) : '') + '</div>';
-        h += '</div>';
-        h += '<div style="text-align:right">';
-        h += '<div class="t3" style="color:var(--ink)">' + r.v.sbp + '/' + r.v.dbp + '</div>';
-        h += '<span class="badge ' + lv.tone + '" style="margin-top:4px">' + lv.text + '</span>';
-        h += '</div></div>';
-      }
-      h += '</div>';
+    ctx.strokeStyle = '#EDE0C8';
+    ctx.lineWidth = 1;
+    for (var r = 0; r <= rows; r++) {
+      var val = lo + stepS * r;
+      var y = Y(val);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(W - padR, y);
+      ctx.stroke();
+      ctx.fillStyle = '#A08B70';
+      ctx.textAlign = 'right';
+      ctx.fillText(String(val), padL - 6, y);
     }
-    h += '</div></div>';
-    page.innerHTML = h;
+
+    function line(key, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      for (var j = 0; j < list.length; j++) {
+        var px = X(j), py = Y(+list[j].v[key]);
+        if (j === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke();
+      for (j = 0; j < list.length; j++) {
+        ctx.beginPath();
+        ctx.arc(X(j), Y(+list[j].v[key]), 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff';
+        ctx.fill();
+        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = color;
+        ctx.stroke();
+      }
+    }
+    line('sbp', '#E8710A');
+    line('dbp', '#A9764B');
+
+    ctx.fillStyle = '#A08B70';
+    ctx.textAlign = 'center';
+    var stepX = Math.ceil(list.length / 5);
+    for (i = 0; i < list.length; i += stepX) {
+      ctx.fillText(U.fmtDateShort(list[i].d), X(i), H - 12);
+    }
+    if ((list.length - 1) % stepX !== 0) {
+      ctx.textAlign = 'right';
+      ctx.fillText(U.fmtDateShort(list[list.length - 1].d), W - 2, H - 12);
+    }
+  }
+
+  P.bpHist = function (page) {
+    var ss = S.sessions().slice();
+    var all = [];
+    for (var i = 0; i < ss.length; i++) {
+      var s = ss[i];
+      var ord = (s.shift === 'am' ? '0' : '1');
+      if (s.up && s.up.sbp) { all.push({ d: s.date, w: '上机', v: s.up, ts: s.date + ord + '0' }); }
+      if (s.down && s.down.sbp) { all.push({ d: s.date, w: '下机', v: s.down, ts: s.date + ord + '1' }); }
+    }
+    all.sort(function (a, b) { return a.ts < b.ts ? -1 : (a.ts > b.ts ? 1 : 0); });
+    var rows = all.slice().reverse();
+
+    function render() {
+      var h = '<div class="page">';
+      h += top({ title: '血压记录', sub: '共 ' + all.length + ' 条', back: true });
+      h += '<div class="scroll">';
+      h += '<div class="tabs" id="tabs">';
+      h += '<div data-m="trend" class="' + (bpMode === 'trend' ? 'on' : '') + '">趋势</div>';
+      h += '<div data-m="list" class="' + (bpMode === 'list' ? 'on' : '') + '">列表</div>';
+      h += '</div>';
+
+      if (!all.length) {
+        h += '<div class="empty mt20">还没有记录<br>去「血压」页记一次吧</div>';
+      } else if (bpMode === 'trend') {
+        h += '<div class="card mt12"><canvas class="chart" id="cv"></canvas>';
+        h += '<div class="legend"><span><i style="background:#E8710A"></i>高压</span><span><i style="background:#A9764B"></i>低压</span></div></div>';
+
+        var sumS = 0, sumD = 0, mxS = -1, mnD = 999, cnt = all.length;
+        for (var k = 0; k < all.length; k++) {
+          var sb = +all[k].v.sbp, db = +all[k].v.dbp;
+          sumS += sb; sumD += db;
+          if (sb > mxS) { mxS = sb; }
+          if (db < mnD) { mnD = db; }
+        }
+        h += '<div class="stat3 mt12">';
+        h += '<div><div class="k">平均血压</div><div class="v o">' + Math.round(sumS / cnt) + '/' + Math.round(sumD / cnt) + '</div></div>';
+        h += '<div><div class="k">最高高压</div><div class="v">' + mxS + '</div></div>';
+        h += '<div><div class="k">最低低压</div><div class="v">' + mnD + '</div></div>';
+        h += '</div>';
+
+        var hiCnt = 0, loCnt = 0;
+        for (k = 0; k < all.length; k++) {
+          var lv0 = U.bpLevel(+all[k].v.sbp, +all[k].v.dbp);
+          if (lv0.tone === 'o' || lv0.tone === 'r') { hiCnt++; }
+          if (lv0.tone === 'y') { loCnt++; }
+        }
+        h += '<div class="card mt12"><div class="h2">这段时间</div>';
+        h += '<div class="row" style="justify-content:space-between"><span class="lbl">偏高 ' + hiCnt + ' 次</span>';
+        h += '<span class="lbl">偏低 ' + loCnt + ' 次</span>';
+        h += '<span class="lbl">正常 ' + (cnt - hiCnt - loCnt) + ' 次</span></div>';
+        h += '<div class="tiny muted mt8">只按区间标颜色，不替代医生判断</div>';
+        h += '</div>';
+      } else {
+        h += '<div class="gap10 mt12" style="display:block">';
+        for (i = 0; i < rows.length; i++) {
+          var r = rows[i];
+          var lv = U.bpLevel(r.v.sbp, r.v.dbp);
+          h += '<div class="lrow">';
+          h += '<div class="main">';
+          h += '<div class="t1">' + U.fmtDate(r.d) + ' ' + r.w + '</div>';
+          h += '<div class="t2">' + (r.v.time || '') + (r.v.hr ? (' · 心率 ' + r.v.hr) : '') + '</div>';
+          h += '</div>';
+          h += '<div style="text-align:right">';
+          h += '<div class="t3" style="color:var(--ink)">' + r.v.sbp + '/' + r.v.dbp + '</div>';
+          h += '<span class="badge ' + lv.tone + '" style="margin-top:4px">' + lv.text + '</span>';
+          h += '</div></div>';
+        }
+        h += '</div>';
+      }
+      h += '</div></div>';
+      page.innerHTML = h;
+
+      page.querySelector('#tabs').onclick = function (e) {
+        var t = e.target.closest('[data-m]');
+        if (!t) { return; }
+        bpMode = t.getAttribute('data-m');
+        render();
+      };
+      if (bpMode === 'trend' && all.length) {
+        drawBp(page.querySelector('#cv'), all);
+      }
+    }
+
+    render();
   };
 
   g.P1 = P;

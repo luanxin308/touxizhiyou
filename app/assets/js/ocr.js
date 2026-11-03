@@ -141,6 +141,23 @@
     return out;
   }
 
+  // 合并间距过小的相邻带：数码管横段之间的空隙会把一整行切成好几条
+  function mergeBands(list, maxGap) {
+    if (!list || list.length < 2) { return list || []; }
+    var out = [list[0].slice()];
+    for (var i = 1; i < list.length; i++) {
+      var last = out[out.length - 1];
+      var gap = list[i][0] - last[1] - 1;
+      var h = Math.max(last[1] - last[0], list[i][1] - list[i][0]);
+      if (gap <= Math.max(2, Math.round(h * maxGap))) {
+        last[1] = list[i][1];
+      } else {
+        out.push(list[i].slice());
+      }
+    }
+    return out;
+  }
+
   function density(bin, W, x0, y0, x1, y1) {
     if (x1 < x0 || y1 < y0) { return 0; }
     var cnt = 0, tot = 0;
@@ -197,7 +214,7 @@
     };
   }
 
-  var SEG_TH = 0.30;
+  var SEG_TH = 0.40;
 
   function readSegMask(bin, W, box) {
     var R = segRects(box);
@@ -263,8 +280,15 @@
       return { ok: false, reason: 'empty', text: '', lines: [] };
     }
 
-    var rowTh = Math.max(2, Math.floor(maxRow * 0.25));
+    // 阈值要低到能容忍数字内部的细窄区（如 0 的中间只有左右两竖），否则一行会被切碎
+    var rowTh = Math.max(1, Math.floor(maxRow * 0.05));
     var rowBands = bands(rp, Math.max(6, Math.round(H * 0.02)), rowTh);
+    // 段带高度中位数：用它判断"这是数字内部的段缝"还是"这是两行之间的空行"
+    var hs = [];
+    for (var hb = 0; hb < rowBands.length; hb++) { hs.push(rowBands[hb][1] - rowBands[hb][0] + 1); }
+    hs.sort(function (a, b) { return a - b; });
+    var hMed = hs.length ? hs[Math.floor(hs.length / 2)] : 0;
+    rowBands = mergeBands(rowBands, Math.max(0.40, Math.min(0.45, hMed ? 12 / hMed : 0.40)));
 
     // 取最高的几行（最多 3 行，血压计可能显示 3 组）
     rowBands.sort(function (p, q) { return (q[1] - q[0]) - (p[1] - p[0]); });
@@ -293,19 +317,23 @@
         if (!tb) { continue; }
         var th = tb.y1 - tb.y0 + 1;
         var tw = tb.x1 - tb.x0 + 1;
-        if (th < bandH * 0.35) { continue; }
 
-        // 小数点：矮个子、宽高比很小、靠近底部
+        // 小数点：矮（不到行高 45%）且不宽。必须先判，否则会被当成"太矮"丢掉
         var ratio = tw / th;
-        if (ratio < 0.30 && th < bandH * 0.35 + 2) {
+        var relH = th / bandH;
+        if (relH < 0.45 && ratio < 1.00) {
           chars.push({ ch: '.', conf: 0.9, dot: true, box: tb });
           continue;
         }
-        if (ratio < 0.34) {
-          chars.push({ ch: '.', conf: 0.85, dot: true, box: tb });
+        if (relH < 0.35) { continue; } // 太矮又不是点，丢弃
+        if (ratio > 1.40) { continue; } // 太扁，不是数字
+
+        // 极窄而高的字符：数码管里只可能是 1（其余数字都占一半以上宽度）
+        if (ratio < 0.36) {
+          chars.push({ ch: '1', conf: 0.8, mask: 6, box: tb });
+          lastY = tb.y1;
           continue;
         }
-        if (ratio > 1.4) { continue; } // 太扁，不是数字
 
         var r = readSegMask(bin, W, tb);
         var d = maskToDigit(r.mask);
