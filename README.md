@@ -7,7 +7,7 @@
 > 本应用只做记录与提醒，**不提供诊断，实际脱水量与用药以医生处方为准**。
 
 **仓库地址** → https://github.com/luanxin308/touxizhiyou
-**安装包** → [dist/touxizhiyou-v1.0.apk](dist/touxizhiyou-v1.0.apk)（约 57 KB，安卓 7.0 及以上）
+**安装包下载** → [Releases · v1.0](https://github.com/luanxin308/touxizhiyou/releases/download/v1.0/touxizhiyou-v1.0.apk)（约 57 KB，安卓 7.0 及以上）
 
 ---
 
