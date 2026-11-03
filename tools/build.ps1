@@ -41,7 +41,7 @@ if ($LASTEXITCODE -ne 0) { throw "aapt2 compile failed" }
 
 # 2) link -> base apk (includes assets and R.java)
 Write-Host "[2/6] aapt2 link"
-& (Join-Path $bt "aapt2.exe") link -o (Join-Path $build "base.apk") -I $jar --manifest $man -R (Join-Path $build "res.zip") --java (Join-Path $build "gen") --min-sdk-version 24 --target-sdk-version 34 -A $assets --auto-add-overlay
+& (Join-Path $bt "aapt2.exe") link -o (Join-Path $build "base.apk") -I $jar --manifest $man -R (Join-Path $build "res.zip") --java (Join-Path $build "gen") --min-sdk-version 24 --target-sdk-version 34 --auto-add-overlay
 if ($LASTEXITCODE -ne 0) { throw "aapt2 link failed" }
 
 # 3) javac
@@ -58,14 +58,26 @@ $classes = (Get-ChildItem -Recurse -Filter *.class (Join-Path $build "classes") 
 & (Join-Path $bt "d8.bat") --lib $jar --min-api 24 --output (Join-Path $build "dex") $classes
 if ($LASTEXITCODE -ne 0) { throw "d8 failed" }
 
-# 5) put classes.dex into apk, then align
-Write-Host "[5/6] zipalign"
+# 5) put classes.dex and assets into apk, then align
+# NOTE: do NOT use aapt2 -A on Windows: it writes sub-directory asset entries with
+# backslashes ("assets/js\app.js"), which WebView cannot resolve -> blank screen.
+# Assets are packed here manually with forward slashes.
+Write-Host "[5/6] pack assets + dex"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $apk = Join-Path $build "base.apk"
 $zip = [System.IO.Compression.ZipFile]::Open($apk, 'Update')
+foreach ($e in @($zip.Entries | Where-Object { $_.FullName -like 'assets*' })) { $e.Delete() }
 $entry = $zip.GetEntry("classes.dex")
 if ($entry) { $entry.Delete() }
 [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, (Join-Path $build "dex\classes.dex"), "classes.dex") | Out-Null
+$assetRoot = (Resolve-Path $assets).Path.TrimEnd('\')
+foreach ($f in (Get-ChildItem -Recurse -File $assets)) {
+  $rel = $f.FullName.Substring($assetRoot.Length).TrimStart('\').Replace('\', '/')
+  $name = "assets/" + $rel
+  $old = $zip.GetEntry($name)
+  if ($old) { $old.Delete() }
+  [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $f.FullName, $name, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+}
 $zip.Dispose()
 & (Join-Path $bt "zipalign.exe") -f 4 $apk (Join-Path $build "aligned.apk")
 if ($LASTEXITCODE -ne 0) { throw "zipalign failed" }

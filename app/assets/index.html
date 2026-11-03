@@ -9,6 +9,31 @@
 </head>
 <body class="fs-2">
 <div id="app"></div>
+<script>
+// 启动自检：脚本没加载出来时不要白屏，直接把原因写在屏幕上
+(function () {
+  var errs = [];
+  window.onerror = function (m, src, line) {
+    errs.push(m + ' @ ' + src + ':' + line);
+    return false;
+  };
+  var probes = ['U', 'Store', 'OCR', 'P1', 'P2', 'P3'];
+  setTimeout(function () {
+    var miss = [];
+    for (var i = 0; i < probes.length; i++) {
+      if (!window[probes[i]]) miss.push(probes[i]);
+    }
+    if (miss.length) {
+      document.body.innerHTML =
+        '<div style="padding:24px;font:16px/1.7 sans-serif;color:#C0392B">' +
+        '<h2 style="font-size:20px">页面脚本没能加载</h2>' +
+        '<p>缺少：' + miss.join('、') + '</p>' +
+        (errs.length ? '<p>错误：' + errs.join('<br>') + '</p>' : '') +
+        '<p style="color:#6E5B44">地址：' + location.href + '</p></div>';
+    }
+  }, 800);
+})();
+</script>
 <script src="js/util.js"></script>
 <script src="js/store.js"></script>
 <script src="js/ocr.js"></script>
