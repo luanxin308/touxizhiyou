@@ -13,3 +13,5 @@ desktop.ini
 
 # 调试产物（APK 与截图自行保留）
 proto/shots/_raw*.png
+proto/ocr-out.txt
+proto/*-err.txt
