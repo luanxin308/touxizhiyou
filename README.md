@@ -6,6 +6,9 @@
 > 面向老年使用者设计：字大、按钮大、颜色对比强、关键数字一眼可见。
 > 本应用只做记录与提醒，**不提供诊断，实际脱水量与用药以医生处方为准**。
 
+**仓库地址** → https://github.com/luanxin308/touxizhiyou
+**安装包** → [dist/touxizhiyou-v1.0.apk](dist/touxizhiyou-v1.0.apk)（约 57 KB，安卓 7.0 及以上）
+
 ---
 
 ## 一、它能做什么
